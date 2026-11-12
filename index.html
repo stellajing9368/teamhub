@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamHub 球隊雲端整合管理平台</title>
+  <!-- 引入主樣式表 (深藍、純白、亮綠現代運動科技風) -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 手機版側邊欄背景遮罩 -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- 1. 左側邊導覽列 (Sidebar) -->
+  <aside class="sidebar" id="sidebar">
+    <!-- 品牌 Logo 區 -->
+    <div class="sidebar-brand">
+      <span class="brand-icon">🏐</span>
+      <span>TeamHub</span>
+      <span class="brand-badge">Cloud</span>
+    </div>
+
+    <!-- 導覽頁籤清單 -->
+    <ul class="sidebar-menu">
+      <li class="menu-item">
+        <a class="menu-link active" data-view="view-dashboard" data-title="球隊管理總覽">
+          <span class="menu-icon">📊</span>
+          <span>總覽儀表板</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-view="view-members" data-title="隊員名冊與入隊審核">
+          <span class="menu-icon">👥</span>
+          <span>隊員名冊 & 隊費</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-view="view-orders" data-title="球衣訂購與對帳管理">
+          <span class="menu-icon">👕</span>
+          <span>球衣訂購管理</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-view="view-attendance" data-title="練習出缺席管理">
+          <span class="menu-icon">📅</span>
+          <span>練習出缺席管理</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-view="view-competitions" data-title="比賽報名與檢錄管理">
+          <span class="menu-icon">🏆</span>
+          <span>比賽報名管理</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-view="view-lineup" data-title="排球陣型配置 (預留)">
+          <span class="menu-icon">📋</span>
+          <span>排球陣型</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- 側邊欄底部當前使用者資訊 (展示用) -->
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="sidebar-user-avatar">
+        1
+      </div>
+      <div class="user-meta">
+        <span class="user-name">陳冠廷</span>
+        <span class="user-role">隊長 / 主攻手</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. 右側主要版面結構 (Main Layout) -->
+  <div class="main-layout">
+    <!-- 頂部控制列 (Top Bar) -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- 手機版漢堡選單按鈕 -->
+        <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="切換選單">
+          ☰
+        </button>
+        <h2 class="current-page-title" id="current-page-title">球隊管理總覽</h2>
+      </div>
+      <div class="topbar-right">
+        <!-- 右上角隊名更新為「系排排球隊」 -->
+        <span class="team-badge">系排排球隊</span>
+      </div>
+    </header>
+
+    <!-- 3. 各頁面主要內容容器 -->
+    <main class="page-container">
+
+      <!-- ==========================================
+           頁面 1：總覽儀表板 (Dashboard)
+           ========================================== -->
+      <section class="view-section active" id="view-dashboard">
+        <!-- 四大核心統計指標卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>正式入隊隊員 (已繳隊費)</h4>
+              <div class="stat-value" id="stat-paid-members">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-blue">👥</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>全隊平均出席率</h4>
+              <div class="stat-value" id="stat-attendance-rate">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-green">📈</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>待核對球衣訂單</h4>
+              <div class="stat-value" id="stat-pending-orders">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-yellow">👕</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>距下次練習</h4>
+              <div class="stat-value" id="stat-next-practice">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-purple">🏐</div>
+          </div>
+        </div>
+
+        <!-- 儀表板下半部：近期日程與最新訂單 -->
+        <div class="dashboard-grid">
+          <!-- 近期練習行程 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 即將進行的練習 (固定週一、週二)</h3>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">18:00~22:00</span>
+            </div>
+            <div class="card-body" id="dashboard-practice-list"></div>
+          </div>
+
+          <!-- 最新球衣訂購摘要 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">👕 最新球衣訂購動態</h3>
+            </div>
+            <div class="card-body" id="dashboard-order-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           頁面 2：隊員名冊管理 (Members)
+           ========================================== -->
+      <section class="view-section" id="view-members">
+        <!-- 隊費 300 元繳交政策說明橫幅 -->
+        <div class="card" style="background: #f8fafc; border-left: 4px solid var(--accent-green); margin-bottom: 1.25rem;">
+          <div class="card-body" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <strong style="color: var(--primary-navy); font-size: 0.95rem;">💰 本學期隊費規範：每人 NT$ 300 元</strong>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+                隊費包含場地租借、比賽飲水與球具維護。<strong>有繳清隊費者才具備正式入隊與出賽資格</strong>；未繳費者標示為尚未入隊。
+              </p>
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 6px 12px; border-radius: 6px;">
+              入隊進度：<span id="members-paid-ratio">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 隊員列表卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">👥 全隊隊員名冊與文件審核</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">可點擊操作切換繳費狀態或檢視證件</span>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>隊員照片</th>
+                    <th>背號</th>
+                    <th>姓名與信箱</th>
+                    <th>球隊身分</th>
+                    <th>守備位置</th>
+                    <th>隊費狀態 (NT$ 300)</th>
+                    <th>入隊證明文件</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="members-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           頁面 3：球衣訂購管理 (Orders)
+           ========================================== -->
+      <section class="view-section" id="view-orders">
+        
+        <!-- 【球經管理】統計數據摘要卡片列 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>總訂購件數</h4>
+              <div class="stat-value" id="order-stat-total-qty">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-blue">📦</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>訂單總金額</h4>
+              <div class="stat-value" id="order-stat-total-amt">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-green">💵</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>已收款金額</h4>
+              <div class="stat-value" id="order-stat-paid-amt" style="color: #166534;">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-yellow">✅</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>待催收未付款</h4>
+              <div class="stat-value" id="order-stat-unpaid-amt" style="color: #b91c1c;">--</div>
+            </div>
+            <div class="stat-icon-wrapper icon-rose">⏳</div>
+          </div>
+        </div>
+
+        <!-- 【球經管理】各尺寸統計匯總看板 (XS, S, M, L, XL, 2XL) -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h3 class="card-title">📏 各尺寸訂購總件數速查 (廠商提報專用)</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">系統依全隊訂單自動加總件數</span>
+          </div>
+          <div class="card-body">
+            <div class="size-breakdown-container" id="size-breakdown-grid"></div>
+          </div>
+        </div>
+
+        <!-- 【隊員訂購】線上訂購 / 編輯修改表單卡片 -->
+        <div class="card" id="order-form-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" id="order-form-title">🛒 隊員線上訂購球衣</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                ⏰ 本期球衣團購截止日：<strong>2026-11-30 23:59</strong>。截止前隊員可於下方清單隨時修改或取消訂單！
+              </p>
+            </div>
+            <span class="badge badge-success" id="order-form-mode-badge">新增模式</span>
+          </div>
+          <div class="card-body">
+            <form id="new-order-form" onsubmit="handleOrderFormSubmit(event)">
+              <input type="hidden" id="edit-order-id" value="">
+
+              <div class="order-form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="order-member-name">訂購人 (隊員名單)</label>
+                  <select id="order-member-name" class="form-select" required></select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="order-product-select">球衣種類 (顯示單價)</label>
+                  <select id="order-product-select" class="form-select" onchange="calculateOrderTotal()" required></select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="order-size-select">尺寸</label>
+                  <select id="order-size-select" class="form-select" required>
+                    <option value="XS">XS (胸寬約 44cm)</option>
+                    <option value="S">S (胸寬約 47cm)</option>
+                    <option value="M" selected>M (胸寬約 50cm)</option>
+                    <option value="L">L (胸寬約 53cm)</option>
+                    <option value="XL">XL (胸寬約 56cm)</option>
+                    <option value="2XL">2XL (胸寬約 59cm)</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="order-quantity">購買數量 (件)</label>
+                  <input type="number" id="order-quantity" class="form-input" min="1" max="10" value="1" oninput="calculateOrderTotal()" required>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="order-custom-number">客製燙印背號 (選填)</label>
+                  <input type="number" id="order-custom-number" class="form-input" placeholder="例如: 7" min="0" max="99">
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="order-custom-name">燙印英文姓名 (選填)</label>
+                  <input type="text" id="order-custom-name" class="form-input" placeholder="例如: DA MING" maxlength="20">
+                </div>
+              </div>
+
+              <!-- 即時金額試算提示盒 -->
+              <div class="price-summary-box">
+                <div>
+                  <div class="price-summary-title">自動結算總金額</div>
+                  <div id="price-calculation-detail" style="font-size: 0.85rem; color: #166534; margin-top: 2px;">
+                    單價 NT$ 350 × 1 件
+                  </div>
+                </div>
+                <div class="price-summary-val" id="order-total-amount">
+                  NT$ 350
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; align-items: center;">
+                <button type="button" id="cancel-edit-btn" class="btn btn-outline" style="display: none;" onclick="cancelEditOrder()">
+                  放棄修改
+                </button>
+                <button type="submit" id="submit-order-btn" class="btn btn-primary">
+                  確認送出訂單
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 【球經管理】訂單搜尋、篩選與全隊清冊卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">📋 全隊球衣訂單總表與對帳清冊</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                球經可在此手動切換付款狀態、篩選名單，或將最新資料匯出為廠商 CSV
+              </p>
+            </div>
+            <button class="btn btn-navy btn-sm" onclick="handleExportCSV()">
+              📥 匯出 Excel 廠商訂購單 (CSV)
+            </button>
+          </div>
+          <div class="card-body">
+            
+            <div class="filter-toolbar">
+              <div class="filter-left">
+                <div class="search-input-wrapper">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="filter-search-input" class="search-input" placeholder="搜尋隊員姓名、訂單編號..." oninput="applyOrderFilters()">
+                </div>
+
+                <select id="filter-payment-status" class="form-select" style="padding: 0.55rem; width: auto;" onchange="applyOrderFilters()">
+                  <option value="all">所有付款狀態 (全部)</option>
+                  <option value="unpaid">未付款名單 (待催繳)</option>
+                  <option value="paid">已付款名單 (已核對)</option>
+                </select>
+
+                <select id="filter-product-type" class="form-select" style="padding: 0.55rem; width: auto;" onchange="applyOrderFilters()">
+                  <option value="all">所有球衣種類</option>
+                  <option value="practice">僅看練習服</option>
+                  <option value="competition">僅看比賽服/褲</option>
+                </select>
+              </div>
+
+              <div>
+                <span id="filtered-count-badge" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                  顯示 0 / 0 筆訂單
+                </span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>訂單編號</th>
+                    <th>訂購隊員</th>
+                    <th>球衣品項</th>
+                    <th>尺寸</th>
+                    <th>背號 / 燙印</th>
+                    <th>件數</th>
+                    <th>單價</th>
+                    <th>總金額</th>
+                    <th>付款狀態</th>
+                    <th>管理操作</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body"></tbody>
+              </table>
+            </div>
+
+            <div id="orders-empty-state" style="display: none; text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+              <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+              <div style="font-weight: 600; color: var(--primary-navy);">找不到符合條件的球衣訂單</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           頁面 4：練習出缺席管理 (Attendance)
+           ========================================== -->
+      <section class="view-section" id="view-attendance">
+
+        <!-- 出席率計算規則說明橫幅 -->
+        <div class="card" style="background: #f0fdf4; border-left: 4px solid var(--accent-green); margin-bottom: 1.5rem;">
+          <div class="card-body" style="padding: 1.15rem 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong style="color: #166534; font-size: 1rem;">📊 TeamHub 出席率計算公式與規則定義</strong>
+                <p style="font-size: 0.85rem; color: #15803d; margin-top: 0.35rem; line-height: 1.6;">
+                  • <strong>標準出席率公式</strong>：<code>出席率 = (實際出席次數 / (出席 + 缺席 + 請假)) × 100%</code><br>
+                  • <strong>請假與缺席</strong>：請假次數計入應到場次（分母增加），與實際缺席分開獨立統計。<br>
+                  • <strong>取消的練習 (Cancelled)</strong>：練習不舉行，<strong>絕不計入分母</strong>。<br>
+                  • <strong>尚未確認的紀錄 (Unconfirmed)</strong>：尚未完成點名登記，<strong>不計入分母，且絕不能自動視為出席</strong>。
+                </p>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.8rem;">客觀公開透明</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 管理者建立與維護練習場次 -->
+        <div class="card" id="practice-form-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" id="practice-form-title">🏐 新增排球隊練習日程</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                球隊固定練習日：<strong>星期一、星期二 18:00 ~ 22:00</strong>，場地可選甲、乙、丙、丁場
+              </p>
+            </div>
+            <span class="badge badge-success" id="practice-form-badge">建立模式</span>
+          </div>
+          <div class="card-body">
+            <form id="new-practice-form" onsubmit="handlePracticeFormSubmit(event)">
+              <input type="hidden" id="edit-practice-id" value="">
+
+              <div class="order-form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="practice-date-input">練習日期 (固定週一、週二)</label>
+                  <input type="date" id="practice-date-input" class="form-input" onchange="handleDateChange()" required>
+                  <span id="practice-weekday-tip" style="font-size: 0.75rem; color: var(--accent-blue); margin-top: 4px; font-weight: 600;"></span>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="practice-time-input">練習時間</label>
+                  <input type="text" id="practice-time-input" class="form-input" value="18:00 - 22:00" required>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="practice-court-select">排球場地</label>
+                  <select id="practice-court-select" class="form-select" required>
+                    <option value="甲場" selected>體育館 甲場</option>
+                    <option value="乙場">體育館 乙場</option>
+                    <option value="丙場">室外排球場 丙場</option>
+                    <option value="丁場">室外排球場 丁場</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="practice-note-input">訓練重點 / 備註說明</label>
+                  <input type="text" id="practice-note-input" class="form-input" placeholder="例如：接發球防守陣型配合 / 發球特訓">
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; align-items: center;">
+                <button type="button" id="cancel-edit-practice-btn" class="btn btn-outline" style="display: none;" onclick="cancelEditPractice()">
+                  放棄修改
+                </button>
+                <button type="submit" id="submit-practice-btn" class="btn btn-primary">
+                  發布練習日程
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 練習場次卡片列表 -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📅 排定練習場次與點名入口</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">點擊「展開點名登記」即可對該場次進行全隊點名</span>
+          </div>
+          <div class="card-body">
+            <div class="practices-grid" id="practices-list-container"></div>
+          </div>
+        </div>
+
+        <!-- 現場出席登記點名面版 (展開點名專區) -->
+        <div class="card" id="checkin-panel-card" style="border: 2px solid var(--accent-blue); display: none;">
+          <div class="card-header" style="background: #eff6ff;">
+            <div>
+              <h3 class="card-title" id="checkin-panel-title" style="color: #1e40af;">📋 練習現場出席登記</h3>
+              <p style="font-size: 0.8rem; color: #3b82f6; margin-top: 2px;" id="checkin-panel-subtitle">點名中...</p>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="closeCheckinPanel()">收起點名表 ✕</button>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              💡 <strong>操作說明</strong>：點選每位隊員右側的按鈕標記出勤狀態。若隊員已有提早送出請假/晚到申請，系統將自動顯示假由以供審核。尚未確認的隊員不會自動算作出席。
+            </p>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>背號</th>
+                    <th>隊員姓名</th>
+                    <th>守備位置</th>
+                    <th>隊員假單 / 晚到申請</th>
+                    <th>目前登記結果</th>
+                    <th>點名操作</th>
+                  </tr>
+                </thead>
+                <tbody id="checkin-table-body"></tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: 1.25rem; text-align: right;">
+              <button class="btn btn-primary" onclick="finishCheckin()">完成點名並儲存紀錄</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 隊員線上請假 / 晚到申請 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">📝 隊員線上請假 / 晚到通報</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                請假紀錄與管理者的實際出席登記將分開獨立保存，請假不等於無故缺席！
+              </p>
+            </div>
+            <span class="badge badge-warning">線上即時登記</span>
+          </div>
+          <div class="card-body">
+            <form id="leave-request-form" onsubmit="handleLeaveFormSubmit(event)">
+              <div class="order-form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="leave-practice-select">請假/晚到場次</label>
+                  <select id="leave-practice-select" class="form-select" required></select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="leave-member-select">隊員姓名 (既有名冊)</label>
+                  <select id="leave-member-select" class="form-select" required></select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="leave-type-select">假別類型</label>
+                  <select id="leave-type-select" class="form-select" required>
+                    <option value="leave" selected>❌ 請假 (全場無法出席)</option>
+                    <option value="late">⏰ 晚到 (稍後抵達球場)</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="leave-reason-input">事由說明</label>
+                  <input type="text" id="leave-reason-input" class="form-input" placeholder="例如：系上必修期中考 / 補習 / 發燒就醫" required>
+                </div>
+              </div>
+
+              <div style="text-align: right;">
+                <button type="submit" class="btn btn-navy">送出請假/晚到申請</button>
+              </div>
+            </form>
+
+            <div style="margin-top: 1.5rem;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-navy); margin-bottom: 0.75rem;">
+                📋 近期請假與晚到通報清單 (已留存)
+              </h4>
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>通報單號</th>
+                      <th>隊員姓名</th>
+                      <th>練習場次</th>
+                      <th>類型</th>
+                      <th>請假原因說明</th>
+                      <th>通報時間</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leaves-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 全隊出席率統計與報表匯出 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">📈 全隊出缺席統計與出席率報表</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                可依日期區間篩選，出席率精準加總，支援匯出 Excel 報表
+              </p>
+            </div>
+            <button class="btn btn-navy btn-sm" onclick="handleExportAttendanceCSV()">
+              📥 匯出全隊出席統計 (CSV)
+            </button>
+          </div>
+          <div class="card-body">
+            
+            <div class="filter-toolbar">
+              <div class="filter-left">
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-navy);">篩選統計日期範圍：</span>
+                <input type="date" id="stats-start-date" class="form-input" style="width: auto; padding: 0.45rem;" onchange="renderAttendanceStatsTable()">
+                <span style="color: var(--text-muted);">至</span>
+                <input type="date" id="stats-end-date" class="form-input" style="width: auto; padding: 0.45rem;" onchange="renderAttendanceStatsTable()">
+                <button class="btn btn-outline btn-sm" onclick="clearDateFilter()">清除篩選</button>
+              </div>
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                  註：取消練習與尚未確認不計入出席率分母
+                </span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>背號</th>
+                    <th>隊員姓名</th>
+                    <th>球隊身分</th>
+                    <th>守備位置</th>
+                    <th>已結算場次</th>
+                    <th>實際出席</th>
+                    <th>缺席</th>
+                    <th>請假</th>
+                    <th>晚到</th>
+                    <th>出席率</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-stats-table-body"></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==========================================
+           頁面 5：比賽報名管理 (Competitions) - 全新升級：自動拉出檢錄表
+           ========================================== -->
+      <section class="view-section" id="view-competitions">
+
+        <!-- 痛點二解決：一鍵報名與自動匯入機制說明 -->
+        <div class="card" style="background: #f0fdf4; border-left: 4px solid var(--accent-green); margin-bottom: 1.5rem;">
+          <div class="card-body" style="padding: 1.15rem 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong style="color: #166534; font-size: 1rem;">🏆 大專盃排球聯賽一鍵報名與全隊自動檢錄系統</strong>
+                <p style="font-size: 0.85rem; color: #15803d; margin-top: 0.35rem; line-height: 1.6;">
+                  • <strong>告別重複填寫 Google 表單</strong>：系統直接拉出全隊名冊大表，<strong>自動匯入學號、身分證字號、出生年月日、生活照、在學證明及學生證</strong>！<br>
+                  • <strong>最後報名一鍵搞定</strong>：球經核對參賽名冊與文件齊全度後，可一鍵匯出符合大專體育總會排球委員會規範的正式報名清冊！
+                </p>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.8rem;">自動整合雲端檔案</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 賽事日程清單卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🏐 近期大專排球賽事與聯賽日程</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">點擊「展開檢錄報名大表」查看全隊資料自動匯入結果</span>
+          </div>
+          <div class="card-body">
+            <div id="competitions-list-container">
+              <!-- 由 app.js 動態渲染賽事卡片 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 【核心功能】：比賽正式報名檢錄總表 (展開專屬工作台) -->
+        <div class="card" id="competition-roster-panel" style="border: 2px solid var(--accent-green); display: none;">
+          <div class="card-header" style="background: #f0fdf4;">
+            <div>
+              <h3 class="card-title" id="roster-panel-title" style="color: #166534;">
+                📋 大專盃排球聯賽 - 正式報名檢錄名冊大表
+              </h3>
+              <p style="font-size: 0.8rem; color: #15803d; margin-top: 2px;" id="roster-panel-subtitle">
+                系統已自動匯入全隊隊員之身分證字號、學號、在學證明與生活照，點擊即可勾選參賽或匯出！
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-navy btn-sm" onclick="handleExportRosterCSV()">
+                📥 匯出大專聯賽正式報名表 (CSV)
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="closeRosterPanel()">
+                收起檢錄表 ✕
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>隊員照片</th>
+                    <th>背號</th>
+                    <th>隊員姓名</th>
+                    <th>守備位置</th>
+                    <th>學號 (自動匯入)</th>
+                    <th>身分證字號 (自動匯入)</th>
+                    <th>出生年月日</th>
+                    <th>聯絡電話</th>
+                    <th>證件齊全度</th>
+                    <th>報名狀態</th>
+                    <th>報名操作</th>
+                  </tr>
+                </thead>
+                <tbody id="competition-roster-tbody">
+                  <!-- 由 app.js 動態渲染自動匯入之檢錄大表 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==========================================
+           頁面 6：排球陣型配置 (Lineup - 預留)
+           ========================================== -->
+      <section class="view-section" id="view-lineup">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📋 排球戰術與六人站位配置 (第三階段預留展示)</h3>
+            <span class="badge badge-success">進階功能規劃</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+              解決痛點：隊長反覆安排發球、接發球站位與輪轉，未來可直接於線上畫布拖曳配置並儲存戰術！
+            </p>
+
+            <div style="max-width: 500px; margin: 0 auto; background: #e0f2fe; border: 3px solid #0284c7; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: var(--shadow-card);">
+              <div style="font-weight: 800; color: #0369a1; margin-bottom: 1rem; letter-spacing: 1px;">
+                🏐 排球場俯視圖 (前場 3 米線與後場站位)
+              </div>
+              
+              <div style="background: rgba(255, 255, 255, 0.8); border: 2px dashed #0284c7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #0369a1; margin-bottom: 0.5rem;">【前排進攻區 (Front Row)】</div>
+                <div style="display: flex; justify-content: space-around;">
+                  <div style="background: #0f172a; color:#fff; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">4 號位 (主攻)</div>
+                  <div style="background: #0f172a; color:#fff; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">3 號位 (快攻)</div>
+                  <div style="background: #0f172a; color:#fff; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">2 號位 (舉球)</div>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.8); border: 2px dashed #0284c7; border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #0369a1; margin-bottom: 0.5rem;">【後排防守區 (Back Row)】</div>
+                <div style="display: flex; justify-content: space-around;">
+                  <div style="background: #1e293b; color:#fff; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">5 號位 (防守)</div>
+                  <div style="background: #10b981; color:#0f172a; font-weight:700; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">6 號位 (自由)</div>
+                  <div style="background: #1e293b; color:#fff; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">1 號位 (發球)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 4. 隊員證件與生活照上傳 / 查看 Modal 視窗 -->
+  <div class="modal-overlay" id="docs-modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-member-title">隊員身分證明與生活照管理</h3>
+        <button class="modal-close-btn" onclick="closeDocsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          大專盃聯賽與正式賽事檢核必備。支援點擊下方按鈕上傳本機圖檔，即時於瀏覽器預覽！
+        </p>
+
+        <div class="doc-upload-grid">
+          <div class="doc-card">
+            <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">📷 隊員生活照</h4>
+            <div id="preview-box-avatar">
+              <div class="doc-placeholder">未上傳</div>
+            </div>
+            <label class="btn btn-outline btn-sm" style="width: 100%; cursor: pointer;">
+              選擇圖片上傳
+              <input type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'avatar')">
+            </label>
+          </div>
+
+          <div class="doc-card">
+            <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">🪪 學生證正面</h4>
+            <div id="preview-box-studentCard">
+              <div class="doc-placeholder">未上傳</div>
+            </div>
+            <label class="btn btn-outline btn-sm" style="width: 100%; cursor: pointer;">
+              選擇圖片上傳
+              <input type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'studentCard')">
+            </label>
+          </div>
+
+          <div class="doc-card">
+            <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">📄 在學證明文件</h4>
+            <div id="preview-box-enrollmentCert">
+              <div class="doc-placeholder">未上傳</div>
+            </div>
+            <label class="btn btn-outline btn-sm" style="width: 100%; cursor: pointer;">
+              選擇圖片上傳
+              <input type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'enrollmentCert')">
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; text-align: right;">
+          <button class="btn btn-primary" onclick="closeDocsModal()">完成檢視</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入假資料與核心邏輯服務模組 -->
+  <script src="js/data.js"></script>
+  <script src="js/order-service.js"></script>
+  <script src="js/attendance-service.js"></script>
+  <script src="js/competition-service.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

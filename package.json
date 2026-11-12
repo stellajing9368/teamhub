@@ -1,0 +1,31 @@
+{
+  "name": "teamhub",
+  "version": "1.0.0",
+  "description": "TeamHub 球隊雲端整合管理平台 - 大學運動球隊專用整合管理系統",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test-order-service.js && node test-attendance-service.js && node test-competition-service.js",
+    "db:init": "node src/db/init.js",
+    "db:seed": "node src/db/seed.js"
+  },
+  "keywords": [
+    "volleyball",
+    "team-management",
+    "cloud-service",
+    "render",
+    "postgresql",
+    "express"
+  ],
+  "author": "TeamHub Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}
